@@ -1,0 +1,86 @@
+/*	LED_Pull_UP
+	Horyeong Park, Oct, 28, 2017
+*/
+
+#include "FreeRTOS_AVR.h"
+
+#define LEDPIN 7
+#define BUTTONPIN 11
+
+SemaphoreHandle_t mutex1;
+
+int buttoninput = LOW;
+/* 버튼이 눌리면 buttoninput 변수는 HIGH값을 가진다.
+   초기값은 LOW이다.
+*/
+
+boolean isLedON = false;
+/* LED의 상태를 boolean 변수 isLedON을 통해 확인
+   LED가 꺼져있을 경우 :: isLedON = false;
+   LED가 켜져있을 경우 :: isLedON = true;
+*/
+
+boolean isReleasedButton = true;
+/* 손가락으로 버튼을 누르다가 떼었는지 확인한다.
+   버튼을 눌렀을 때 loop로 인해 켜졌다가 꺼지는 것을 반복하는 것을 방지
+   버튼이 눌리고 LED가 켜지거나 꺼지면 false값으로 바뀌며, 떼었을 떄 true값으로 바뀌게 된다.
+*/
+
+void InputButtonTask(void *pvParameters) {
+  for (;;) {
+    xSemaphoreTake(mutex1, portMAX_DELAY);
+    buttoninput = digitalRead(BUTTONPIN); // 버튼의 입력값을 받아옴.
+
+    if (buttoninput == HIGH & isReleasedButton == true)  {           // 버튼을 누르고 뗀 상태를 Serial.print로 알려준다.
+      Serial.println ("BUTTON PUSHED!");
+    }
+    if (buttoninput == LOW & isReleasedButton == false) {
+      Serial.println ("BUTTON RELEASED!\n");
+      isReleasedButton = true;
+    }
+
+    xSemaphoreGive(mutex1);
+    vTaskDelay(100);
+  }
+}
+
+void LEDTask(void *pvParameters) {
+  for (;;) {
+    xSemaphoreTake(mutex1, portMAX_DELAY);
+
+    if (buttoninput == HIGH && isReleasedButton == true)    {   // 버튼이 눌려 buttoninput 변수가 HIGH값을 가지게 되어 아래 명령을 실행
+      if (isLedON == false) {                                   // isLEDON의 상태에 따라 LED를 켜거나 끄는 실행한다.
+        digitalWrite(LEDPIN, HIGH);
+        isLedON = true;
+        isReleasedButton = false;
+        Serial.println ("LED ON!");
+      }
+      else  {
+        digitalWrite(LEDPIN, LOW);
+        isLedON = false;
+        isReleasedButton = false;
+        Serial.println ("LED OFF!");
+      }
+    }
+    xSemaphoreGive(mutex1);
+    vTaskDelay(100);
+  }
+}
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+
+  pinMode(BUTTONPIN, INPUT);
+  pinMode(LEDPIN, OUTPUT);
+
+  mutex1 = xSemaphoreCreateMutex();
+
+  xTaskCreate(InputButtonTask, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL);
+  xTaskCreate(LEDTask, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+
+  vTaskStartScheduler();
+  while (1);
+}
+void loop() {
+  // put your main code here, to run repeatedly:
+}
