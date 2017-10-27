@@ -1,5 +1,5 @@
 /*	LED_Pull_UP
-	Horyeong Park, Oct, 28, 2017
+	DesignOZ, Oct, 28, 2017
 */
 
 #include "FreeRTOS_AVR.h"
