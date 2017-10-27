@@ -1,0 +1,63 @@
+/*	LED_Pull_UP
+	Horyeong Park, Oct, 28, 2017
+*/
+
+
+#include "FreeRTOS_AVR.h"
+
+#define LEDPIN 7
+#define BUTTONPIN 11
+
+SemaphoreHandle_t mutex1;
+
+int buttoninput = LOW;
+/* 버튼이 눌리면 buttoninput 변수는 HIGH값을 가진다.
+   초기값은 LOW이다.
+*/
+
+void InputButtonTask(void *pvParameters) {
+  for (;;) {
+    xSemaphoreTake(mutex1, portMAX_DELAY);
+
+    buttoninput = digitalRead(BUTTONPIN); // 버튼의 입력값을 받아옴.
+
+    xSemaphoreGive(mutex1);
+    vTaskDelay(100);
+  }
+}
+
+void LEDTask(void *pvParameters) {
+  for (;;) {
+    xSemaphoreTake(mutex1, portMAX_DELAY);
+
+    if (buttoninput == HIGH)    {         // 버튼이 눌려 buttoninput 변수가 HIGH값을 가지게 되어 아래 명령을 실행
+      digitalWrite(LEDPIN, HIGH);
+      Serial.println ("LED Turn ON!");
+    } else {
+      digitalWrite(LEDPIN, LOW);
+      Serial.println ("LED Turn OFF!");
+      
+    }
+    
+    xSemaphoreGive(mutex1);
+    vTaskDelay(100);
+  }
+}
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+
+  pinMode(BUTTONPIN, INPUT);
+  pinMode(LEDPIN, OUTPUT);
+
+  mutex1 = xSemaphoreCreateMutex();
+
+  xTaskCreate(InputButtonTask, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL);
+  xTaskCreate(LEDTask, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+
+  vTaskStartScheduler();
+  while (1);
+}
+void loop() {
+  // put your main code here, to run repeatedly:
+}
