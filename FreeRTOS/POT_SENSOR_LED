@@ -1,0 +1,58 @@
+#include "FreeRTOS_AVR.h"
+
+#define LEDPIN 11
+#define SENSORPIN A1
+
+SemaphoreHandle_t mutex1;
+
+int val;
+
+void InputButtonTask(void *pvParameters) {
+  while (1) {
+    for (;;)  {
+      xSemaphoreTake(mutex1, portMAX_DELAY);
+
+      val = 0;
+      val = analogRead(SENSORPIN);
+
+      xSemaphoreGive(mutex1);
+      vTaskDelay(100);
+    }
+
+  }
+}
+
+void LEDTask(void *pvParameters) {
+  for (;;) {
+    if (val > 100)    {        // 버튼이 눌려 buttoninput 변수가 HIGH값을 가지게 되어 아래 명령을 실행
+      digitalWrite(LEDPIN, HIGH);
+      Serial.println(val);
+    } else {
+      digitalWrite(LEDPIN, LOW);
+      Serial.println(val);
+    }
+
+    xSemaphoreGive(mutex1);
+    vTaskDelay(100);
+  }
+
+}
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600);
+
+  //  pinMode(SENSORPIN, INPUT);
+  pinMode(LEDPIN, OUTPUT);
+
+  mutex1 = xSemaphoreCreateMutex();
+
+  xTaskCreate(InputButtonTask, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL);
+  xTaskCreate(LEDTask, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+
+  vTaskStartScheduler();
+  while (1);
+}
+void loop() {
+  // put your main code here, to run repeatedly:
+}
