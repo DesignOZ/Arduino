@@ -1,5 +1,5 @@
-/*  Semaphore LED
-  Horyeong Park, Nov, 11, 2017
+/*  Semaphore Button
+  Horyeong Park, Nov 11, 2017
 */
 
 #include <FreeRTOS_AVR.h>
