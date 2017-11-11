@@ -9,10 +9,10 @@ int val = 0;
 static void LEDTask(void *pvParameters) {
   for (;;) {
     xSemaphoreTake(sem, portMAX_DELAY);
-    
+
     digitalWrite(LEDPIN, HIGH);
     Serial.println("LED  ON");
-    
+
     vTaskDelay(100);
   }
 }
@@ -20,14 +20,14 @@ static void LEDTask(void *pvParameters) {
 static void InputLight(void *pvParameters) {
   for (;;)  {
     val = analogRead(SENSORPIN);
-    
-    if (val < 100)  {
+
+    if (val > 100)  {
+      xSemaphoreGive(sem);
+      vTaskDelay(100);
+    } else  {
       Serial.println("LED OFF");
       digitalWrite(LEDPIN, LOW);
-      vTaskDelay(100);
-    } else
-      xSemaphoreGive(sem);
-      
+    }
     vTaskDelay(1);
   }
 }
