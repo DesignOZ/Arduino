@@ -1,60 +1,52 @@
-#include "FreeRTOS_AVR.h"
+#include <FreeRTOS_AVR.h>
 
-#define LEDPIN 11
+#define LEDPIN 7
 #define SENSORPIN A1
 
-SemaphoreHandle_t mutex1;
+SemaphoreHandle_t sem;
+int val = 0;
 
-int val;
-
-void InputLight(void *pvParameters) {
-  for (;;)  {
-    xSemaphoreTake(mutex1, portMAX_DELAY);
-
-    val = 0;
-    val = analogRead(SENSORPIN);
-
-    if (val > 100)    {
-      xSemaphoreGive(mutex1);
-      Serial.println(val);
-    } else {
-      Serial.println(val);
-    }
-
-    vTaskDelay(100);
-  }
-}
-
-
-void LEDTask(void *pvParameters) {
+static void LEDTask(void *pvParameters) {
   for (;;) {
-    xSemaphoreTake(mutex1, portMAX_DELAY);
-
-    digitalWrite(LEDPIN, HIGH);
-    Serial.println("LED ON");
-
-    vTaskDelay(500);
-
-    digitalWrite(LEDPIN, LOW);
-    Serial.println("LED OFF");
+    xSemaphoreTake(sem, portMAX_DELAY);
     
-    xSemaphoreGive(mutex1);
+    digitalWrite(LEDPIN, HIGH);
+    Serial.println("LED  ON");
+    
     vTaskDelay(100);
   }
 }
 
+static void InputLight(void *pvParameters) {
+  for (;;)  {
+    val = analogRead(SENSORPIN);
+    
+    if (val < 100)  {
+      Serial.println("LED OFF");
+      digitalWrite(LEDPIN, LOW);
+      vTaskDelay(100);
+    } else
+      xSemaphoreGive(sem);
+      
+    vTaskDelay(1);
+  }
+}
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   pinMode(LEDPIN, OUTPUT);
 
-  mutex1 = xSemaphoreCreateBinary();
+  // High Priority Task (LEDTask)
+  xTaskCreate(LEDTask, NULL, configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, NULL);
 
-  xTaskCreate(InputLight, NULL, configMINIMAL_STACK_SIZE, NULL, 2, NULL);
-  xTaskCreate(LEDTask, NULL, configMINIMAL_STACK_SIZE, NULL, 1, NULL);
+  // Low Priority Task (InputLight)
+  xTaskCreate(InputLight, NULL, configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+
+  vSemaphoreCreateBinary(sem);
+
   vTaskStartScheduler();
-  
+
   while (1);
 }
 void loop() {
