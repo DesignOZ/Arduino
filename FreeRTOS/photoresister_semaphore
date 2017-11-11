@@ -1,5 +1,5 @@
 /*  Semaphore Photoresistor
-  Horyeong Park, Nov, 11, 2017
+  Horyeong Park, Nov 11, 2017
 */
 
 #include <FreeRTOS_AVR.h>
