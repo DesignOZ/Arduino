@@ -1,6 +1,6 @@
 #include <FreeRTOS_AVR.h>
 
-#define LEDPIN 7
+#define LEDPIN 11
 #define SENSORPIN A1
 
 SemaphoreHandle_t sem;
