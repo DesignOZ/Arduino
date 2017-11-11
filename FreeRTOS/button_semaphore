@@ -5,7 +5,7 @@
 #include <FreeRTOS_AVR.h>
 
 #define LEDPIN 11
-#define BUTTON 2
+#define BUTTON 7
 
 SemaphoreHandle_t sem;
 int val = 0;
