@@ -1,7 +1,11 @@
+/*  Semaphore Photoresistor
+  Horyeong Park, Nov, 11, 2017
+*/
+
 #include <FreeRTOS_AVR.h>
 
 #define LEDPIN 11
-#define SENSORPIN A1
+#define BUTTON 2
 
 SemaphoreHandle_t sem;
 int val = 0;
@@ -17,18 +21,17 @@ static void LEDTask(void *pvParameters) {
   }
 }
 
-static void InputLight(void *pvParameters) {
+static void InputButton(void *pvParameters) {
   for (;;)  {
-    val = analogRead(SENSORPIN);
-
-    if (val > 100)  {
+    if (digitalRead(BUTTON) == HIGH) {
       xSemaphoreGive(sem);
-      vTaskDelay(100);
-    } else  {
+    }
+    else {
       Serial.println("LED OFF");
       digitalWrite(LEDPIN, LOW);
     }
-    vTaskDelay(1);
+
+    vTaskDelay(100);
   }
 }
 
@@ -36,12 +39,13 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   pinMode(LEDPIN, OUTPUT);
+  pinMode(BUTTON, INPUT);
 
   // High Priority Task (LEDTask)
   xTaskCreate(LEDTask, NULL, configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, NULL);
 
   // Low Priority Task (InputLight)
-  xTaskCreate(InputLight, NULL, configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+  xTaskCreate(InputButton, NULL, configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
 
   vSemaphoreCreateBinary(sem);
 
