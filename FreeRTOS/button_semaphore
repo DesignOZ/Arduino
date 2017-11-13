@@ -44,7 +44,7 @@ void setup() {
   // High Priority Task (LEDTask)
   xTaskCreate(LEDTask, NULL, configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, NULL);
 
-  // Low Priority Task (InputLight)
+  // Low Priority Task (InputButton)
   xTaskCreate(InputButton, NULL, configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
 
   vSemaphoreCreateBinary(sem);
