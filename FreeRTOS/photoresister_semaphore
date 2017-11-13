@@ -4,7 +4,6 @@
 #include <FreeRTOS_AVR.h>
 
 #define LEDPIN 11
-//#define BUTTON 2
 #define SENSORPIN A1
 
 SemaphoreHandle_t sem;
@@ -40,7 +39,6 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   pinMode(LEDPIN, OUTPUT);
-//  pinMode(BUTTON, INPUT);
 
   // High Priority Task (LEDTask)
   xTaskCreate(LEDTask, NULL, configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, NULL);
